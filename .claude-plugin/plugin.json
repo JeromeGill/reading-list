@@ -1,0 +1,10 @@
+{
+  "name": "reading-list",
+  "description": "Adds the reading-list skill, which appends fetched docs to ~/.claude/reading-list.yaml",
+  "author": {
+    "name": "Jerome Gill"
+  },
+  "homepage": "https://github.com/JeromeGill/reading-list",
+  "repository": "https://github.com/JeromeGill/reading-list",
+  "license": "MIT"
+}

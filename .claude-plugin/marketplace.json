@@ -1,0 +1,14 @@
+{
+  "name": "jeromegill-plugins",
+  "owner": {
+    "name": "Jerome Gill",
+    "url": "https://github.com/JeromeGill"
+  },
+  "plugins": [
+    {
+      "name": "reading-list",
+      "source": "./",
+      "description": "Adds the reading-list skill, which appends fetched docs to ~/.claude/reading-list.yaml"
+    }
+  ]
+}

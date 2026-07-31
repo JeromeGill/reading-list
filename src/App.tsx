@@ -38,10 +38,12 @@ function Row({
   item,
   action,
   onAction,
+  onError,
 }: {
   item: Item | ReadItem;
   action: "read" | "unread";
   onAction: () => void;
+  onError: (e: unknown) => void;
 }) {
   return (
     <li className="flex items-start gap-3 border-b border-stone-200 px-5 py-4 last:border-0 dark:border-stone-800">
@@ -59,7 +61,7 @@ function Row({
 
         <button
           type="button"
-          onClick={() => openUrl(item.link)}
+          onClick={() => openUrl(item.link).catch(onError)}
           className="block max-w-full truncate text-left text-[15px] font-medium text-sky-700 hover:underline dark:text-sky-400"
           title={item.link}
         >
@@ -113,7 +115,7 @@ export default function App() {
   if (error) {
     return (
       <div className="p-6 text-sm text-rose-600 dark:text-rose-400">
-        <p className="font-medium">Could not use ~/.claude/reading-list.yaml</p>
+        <p className="font-medium">Something went wrong</p>
         <p className="mt-1 font-mono text-xs break-all">{error}</p>
       </div>
     );
@@ -152,6 +154,7 @@ export default function App() {
               key={`${item.link}-${i}`}
               item={item}
               action={showRead ? "unread" : "read"}
+              onError={(e) => setError(String(e))}
               onAction={() =>
                 apply(
                   showRead ? markUnread(list, item as ReadItem) : markRead(list, item as Item),

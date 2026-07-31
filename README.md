@@ -1,22 +1,84 @@
 # Reading List
 
-A small desktop app for the pile of docs Claude tells you to read.
+While using claude I regularly get it to pull links to official docs and patterns and things when I am unfamiliar with some aspects of it's suggestions.
 
-Two halves that share one file:
+I started saving links to a .md file via a skill but found it annoying to manage.
 
-- **The skill** — a Claude Code skill. Whenever Claude recommends a doc, spec, or blog post in any project, it appends the link to `~/.claude/reading-list.yaml`.
-- **The app** — a Tauri desktop app that shows the unread list. Click a link to open it in your browser, click `×` to move it to the read pile.
+As a process it's pretty helpful. Especially when working with unfamiliar tech, which I have had to do a lot lately in a new role.
+
+So I vibe coded this little app - Don't judge me - which lets claude manage a .yaml file of links I need to read.
+
+Now Claude appends every doc it cites to one file, and a small Mac app shows what is still unread.
+
+![the app](docs/screenshot.png)
+
+Each link is saved with one line on what that doc *answers*, so later you know why it is there. Click a link to open it. Click `×` to file it under read.
+
+Nothing is uploaded anywhere. The list is one file on your Mac, `~/.claude/reading-list.yaml`.
+
+## Install
+
+Three steps, about five minutes. You need a Mac and Claude Code.
+
+### 1. Install the app
+
+1. Download `Reading.List_<version>_universal.dmg` from [Releases](https://github.com/JeromeGill/reading-list/releases).
+2. Open it, drag **Reading List** into your Applications folder.
+3. The app is unsigned, so the first open is blocked. **Right-click** it in Applications → **Open** → **Open**. Only needed once; after that it opens normally, including from Spotlight.
+
+Works on macOS 10.15 and later, both Apple Silicon and Intel.
+
+### 2. Install the skill
+
+The skill is what teaches Claude to save links. Open Claude Code anywhere and run these three lines:
 
 ```
-Claude (any project) ──writes──▶ ~/.claude/reading-list.yaml ◀──reads/writes── Reading List.app
-        via the reading-list skill
+/plugin marketplace add JeromeGill/reading-list
+/plugin install reading-list@jeromegill-plugins
+/reload-plugins
 ```
 
-The app re-reads the file whenever its window regains focus, so links added while it is open show up when you tab back to it.
+No clone, no build. Confirm the install when it asks.
 
-## The file
+### 3. Tell Claude to actually use it
 
-`~/.claude/reading-list.yaml`
+Claude only uses a skill when it judges it relevant, which is inconsistent. Making it reliable takes one paste.
+
+Open `~/.claude/CLAUDE.md` (create it if it does not exist) and add:
+
+```markdown
+# Reading List
+
+When you suggest a doc, spec, or blog post worth reading, invoke the
+`reading-list` skill. It owns the file, the schema, and the dedupe rules.
+
+- The list lives at `~/.claude/reading-list.yaml`. A desktop app reads and writes it, so don't hand-edit it — go through the skill.
+- Only links you have actually fetched. Never write a URL from memory.
+- Don't re-add a link already listed; say it's already there and which list it's on.
+```
+
+That file is loaded into every Claude Code session, so this works in all your projects.
+
+### Check it worked
+
+In Claude Code, say:
+
+> find me a doc on postgres index types and add it to my reading list
+
+Then open Reading List. The link should be there. If the app was already open, click its window — it refreshes when it regains focus.
+
+## If something goes wrong
+
+| What you see | Fix |
+| --- | --- |
+| macOS says the app "cannot be opened" | You double-clicked it. Right-click → **Open** → **Open** instead. |
+| Claude ignores the reading list | Step 3 was skipped, or `~/.claude/CLAUDE.md` has a typo in the path. You can also just say "add that to my reading list" to force it. |
+| `Marketplace not found` | Run `/plugin marketplace update jeromegill-plugins`, then retry the install. |
+| App is empty but Claude said it saved a link | Click the app window to refocus it. Still empty: open `~/.claude/reading-list.yaml` and check the link is under `unread`. |
+
+## What the file looks like
+
+`~/.claude/reading-list.yaml` is plain text you can read and back up:
 
 ```yaml
 unread:
@@ -30,117 +92,9 @@ read:
     readAt: 2026-07-30
 ```
 
-| Field     | Where       | Meaning                                                                  |
-| --------- | ----------- | ------------------------------------------------------------------------ |
-| `link`    | both        | The URL. Claude only ever adds URLs it actually fetched.                  |
-| `topic`   | both        | Short lowercase slug. The app colour-codes badges by topic.               |
-| `context` | both        | One line on what the doc *answers*.                                       |
-| `readAt`  | `read` only | `YYYY-MM-DD`, written by the app when you click `×`.                      |
+The app owns both lists and writes `readAt` when you mark something read. Claude only ever adds to the top of `unread`, and never adds a link twice. Do not hand-edit it while the app is open.
 
-The app owns the two lists. The skill only ever prepends to `unread`.
+## Docs
 
-## Install
-
-There are two halves and you install them separately. Do both.
-
-### The app — from a release
-
-Requires macOS 10.15 or later. The DMG is universal, so Apple Silicon and Intel both work.
-
-1. Download `Reading.List_<version>_universal.dmg` from [Releases](https://github.com/JeromeGill/reading-list/releases)
-2. Open it and drag **Reading List** to `/Applications`
-3. The app is unsigned, so macOS blocks the first open. Right-click it in `/Applications` → **Open** → **Open**. After that it opens normally, including from Spotlight.
-
-### The app — from source
-
-Needed only if you want to change it. Prerequisites:
-
-| Need   | Check           | Get it                                                     |
-| ------ | --------------- | ---------------------------------------------------------- |
-| Node   | `node -v`       | v20+ (built and tested on v25)                             |
-| pnpm   | `pnpm -v`       | `npm i -g pnpm` (v10+)                                     |
-| Rust   | `cargo --version` | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| Xcode CLT | `xcode-select -p` | `xcode-select --install`                                |
-
-If `cargo` is not found after installing Rust, it is at `~/.cargo/bin`. Add it to your shell:
-
-```sh
-echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
-```
-
-Then:
-
-```sh
-git clone git@github.com:JeromeGill/reading-list.git
-cd reading-list
-./install.sh
-```
-
-`install.sh` runs `pnpm install`, builds, copies `Reading List.app` to `/Applications`, and copies the skill to `~/.claude/skills/reading-list`. It overwrites both if they already exist. First Rust build takes 3–5 minutes; later ones ~20s.
-
-### The skill
-
-```sh
-git clone git@github.com:JeromeGill/reading-list.git
-cp -R reading-list/skills/reading-list ~/.claude/skills/reading-list
-```
-
-The skill creates `~/.claude/reading-list.yaml` if it is missing, so it works on a machine without the app. `install.sh` already does this step for you.
-
-### Tell Claude to use the skill
-
-A skill only fires when Claude judges it relevant. To make it reliable, add a pointer to `~/.claude/CLAUDE.md` so it is always in context:
-
-```markdown
-# Reading List
-
-When you suggest a doc, spec, or blog post worth reading, invoke the
-`reading-list` skill. It owns the file, the schema, and the dedupe rules.
-
-- The list lives at `~/.claude/reading-list.yaml`. A desktop app reads and writes it, so don't hand-edit it — go through the skill.
-- Only links you have actually fetched. Never write a URL from memory.
-- Don't re-add a link already listed; say it's already there and which list it's on.
-```
-
-That is the whole integration. The skill itself carries the schema and the rules; `CLAUDE.md` just guarantees Claude remembers the skill exists.
-
-## Development
-
-```sh
-pnpm tauri dev      # hot-reloading dev window
-pnpm build          # typecheck + build the frontend only
-pnpm tauri build    # .app and .dmg for this machine's architecture
-```
-
-`pnpm tauri dev` reads and writes your real `~/.claude/reading-list.yaml`. Back it up first if you are changing the write path.
-
-### Cutting a release
-
-```sh
-rustup target add x86_64-apple-darwin aarch64-apple-darwin   # once
-pnpm tauri build --target universal-apple-darwin
-```
-
-The DMG lands in `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`.
-
-If `bundle_dmg.sh` fails, a disk image from a previous failed run is probably still mounted. Check `ls /Volumes` for a `dmg.*` entry, then:
-
-```sh
-hdiutil detach /Volumes/dmg.XXXXXX -force
-rm -f src-tauri/target/**/bundle/macos/rw.*.dmg
-```
-
-## Layout
-
-```
-src/
-  App.tsx            UI — list, topic badges, open, mark read
-  reading-list.ts    schema types, YAML load/save, list transitions
-src-tauri/
-  src/lib.rs         Tauri entry; registers the fs and opener plugins
-  capabilities/      fs access is scoped to $HOME/.claude/reading-list.yaml only
-  tauri.conf.json    window and bundle config
-skills/
-  reading-list/      the Claude Code skill, installed to ~/.claude/skills/
-install.sh           builds, installs the app and the skill
-```
+- [Development](docs/development.md) — build from source, run the dev window, cut a release
+- [How it fits together](docs/architecture.md) — the two halves, the shared file, the repo layout

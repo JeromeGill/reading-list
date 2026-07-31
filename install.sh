@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds the app, installs it to /Applications, and installs the reading-list
-# skill to ~/.claude/skills/. Overwrites both if they already exist.
+# Builds the app, installs it to /Applications, and links the reading-list
+# skill into ~/.claude/skills/. Overwrites both if they already exist.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -25,10 +25,12 @@ echo "==> Installing $APP to /Applications"
 rm -rf "/Applications/$APP"
 cp -R "$BUNDLE" /Applications/
 
-echo "==> Installing skill to $SKILL_DEST"
+# Claude Code follows a symlink here, so edits to the checkout take effect
+# without reinstalling.
+echo "==> Linking skill to $SKILL_DEST"
 mkdir -p "$(dirname "$SKILL_DEST")"
 rm -rf "$SKILL_DEST"
-cp -R skills/reading-list "$SKILL_DEST"
+ln -s "$PWD/skills/reading-list" "$SKILL_DEST"
 
 echo
 echo "Done."
