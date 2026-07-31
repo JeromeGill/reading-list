@@ -39,9 +39,21 @@ read:
 
 The app owns the two lists. The skill only ever prepends to `unread`.
 
-## Install on a fresh machine
+## Install
 
-### 1. Prerequisites
+There are two halves and you install them separately. Do both.
+
+### The app — from a release
+
+Requires macOS 10.15 or later. The DMG is universal, so Apple Silicon and Intel both work.
+
+1. Download `Reading List_<version>_universal.dmg` from [Releases](https://github.com/JeromeGill/reading-list/releases)
+2. Open it and drag **Reading List** to `/Applications`
+3. The app is unsigned, so macOS blocks the first open. Right-click it in `/Applications` → **Open** → **Open**. After that it opens normally, including from Spotlight.
+
+### The app — from source
+
+Needed only if you want to change it. Prerequisites:
 
 | Need   | Check           | Get it                                                     |
 | ------ | --------------- | ---------------------------------------------------------- |
@@ -56,28 +68,26 @@ If `cargo` is not found after installing Rust, it is at `~/.cargo/bin`. Add it t
 echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 ```
 
-### 2. Build and install both halves
+Then:
 
 ```sh
-git clone <this repo> readinglist
-cd readinglist
+git clone git@github.com:JeromeGill/reading-list.git
+cd reading-list
 ./install.sh
 ```
 
-`install.sh` does four things:
+`install.sh` runs `pnpm install`, builds, copies `Reading List.app` to `/Applications`, and copies the skill to `~/.claude/skills/reading-list`. It overwrites both if they already exist. First Rust build takes 3–5 minutes; later ones ~20s.
 
-1. `pnpm install`
-2. `pnpm tauri build` — first Rust build takes 3–5 minutes, later ones ~20s
-3. Copies `Reading List.app` to `/Applications`
-4. Copies `skills/reading-list` to `~/.claude/skills/reading-list`
+### The skill
 
-It overwrites both if they already exist.
+```sh
+git clone git@github.com:JeromeGill/reading-list.git
+cp -R reading-list/skills/reading-list ~/.claude/skills/reading-list
+```
 
-### 3. First launch
+The skill creates `~/.claude/reading-list.yaml` if it is missing, so it works on a machine without the app. `install.sh` already does this step for you.
 
-The app is unsigned, so macOS blocks the first open. Right-click it in `/Applications` → **Open** → **Open**. After that it opens normally, including from Spotlight.
-
-### 4. Tell Claude to use the skill
+### Tell Claude to use the skill
 
 A skill only fires when Claude judges it relevant. To make it reliable, add a pointer to `~/.claude/CLAUDE.md` so it is always in context:
 
@@ -94,25 +104,31 @@ When you suggest a doc, spec, or blog post worth reading, invoke the
 
 That is the whole integration. The skill itself carries the schema and the rules; `CLAUDE.md` just guarantees Claude remembers the skill exists.
 
-### Installing the skill on its own
-
-If you only want Claude writing the list on a machine without the app:
-
-```sh
-cp -R skills/reading-list ~/.claude/skills/reading-list
-```
-
-Then add the `CLAUDE.md` block above. The skill creates the YAML file if it is missing.
-
 ## Development
 
 ```sh
 pnpm tauri dev      # hot-reloading dev window
 pnpm build          # typecheck + build the frontend only
-pnpm tauri build    # produce .app and .dmg in src-tauri/target/release/bundle/
+pnpm tauri build    # .app and .dmg for this machine's architecture
 ```
 
 `pnpm tauri dev` reads and writes your real `~/.claude/reading-list.yaml`. Back it up first if you are changing the write path.
+
+### Cutting a release
+
+```sh
+rustup target add x86_64-apple-darwin aarch64-apple-darwin   # once
+pnpm tauri build --target universal-apple-darwin
+```
+
+The DMG lands in `src-tauri/target/universal-apple-darwin/release/bundle/dmg/`.
+
+If `bundle_dmg.sh` fails, a disk image from a previous failed run is probably still mounted. Check `ls /Volumes` for a `dmg.*` entry, then:
+
+```sh
+hdiutil detach /Volumes/dmg.XXXXXX -force
+rm -f src-tauri/target/**/bundle/macos/rw.*.dmg
+```
 
 ## Layout
 
