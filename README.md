@@ -47,7 +47,7 @@ There are two halves and you install them separately. Do both.
 
 Requires macOS 10.15 or later. The DMG is universal, so Apple Silicon and Intel both work.
 
-1. Download `Reading List_<version>_universal.dmg` from [Releases](https://github.com/JeromeGill/reading-list/releases)
+1. Download `Reading.List_<version>_universal.dmg` from [Releases](https://github.com/JeromeGill/reading-list/releases)
 2. Open it and drag **Reading List** to `/Applications`
 3. The app is unsigned, so macOS blocks the first open. Right-click it in `/Applications` → **Open** → **Open**. After that it opens normally, including from Spotlight.
 
