@@ -1,6 +1,6 @@
 ---
 name: reading-list
-description: Append a doc, spec, RFC, or blog post to Jerome's reading list at ~/.claude/reading-list.yaml. Use whenever you recommend something for him to read later, cite a doc page he has not opened, or he says "add that to my reading list". Also use to check whether a link is already on the list before recommending it.
+description: Append a doc, spec, RFC, or blog post to the user's reading list at ~/.claude/reading-list.yaml. Use whenever you recommend something for them to read later, cite a doc page they have not opened, or they say "add that to my reading list". Also use to check whether a link is already on the list before recommending it.
 license: MIT
 metadata:
   hermes:
@@ -10,7 +10,7 @@ metadata:
 
 # reading-list
 
-Jerome's reading list lives at `~/.claude/reading-list.yaml`. A desktop app reads
+The user's reading list lives at `~/.claude/reading-list.yaml`. A desktop app reads
 that file, so the schema below is a contract — keep to it exactly.
 
 ## Schema
@@ -41,7 +41,7 @@ Two top-level keys, both always present, both lists.
 1. Read `~/.claude/reading-list.yaml`. If it does not exist, create it with both
    keys present and `unread` holding your first entry.
 2. Check the URL against **both** `unread` and `read`. If it is already there,
-   do not add it again — tell Jerome it is already on the list, and say which
+   do not add it again — tell the user it is already on the list, and say which
    list it is on.
 3. Insert the new entry at the **top** of `unread`. The app shows newest first.
 4. Leave the `read` list untouched. Never reorder it, never delete from it.
@@ -64,7 +64,7 @@ Two top-level keys, both always present, both lists.
 | about Event Hubs                 | which Kafka features Event Hubs does not support, and how the terms map    |
 | useful for the sync work         | which REST calls mean a block blob is fully committed                     |
 
-## Telling Jerome
+## Telling the user
 
 One line, after the write. Name the topic and the count:
 
