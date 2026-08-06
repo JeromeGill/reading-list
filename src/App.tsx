@@ -10,7 +10,7 @@ import {
   type ReadingList,
 } from "./reading-list";
 
-const TOPIC_COLOURS = [
+const TAG_COLOURS = [
   "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
   "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
@@ -19,10 +19,10 @@ const TOPIC_COLOURS = [
   "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300",
 ];
 
-function topicColour(topic: string): string {
+function tagColour(tag: string): string {
   let hash = 0;
-  for (const char of topic) hash = (hash + char.charCodeAt(0)) % TOPIC_COLOURS.length;
-  return TOPIC_COLOURS[hash];
+  for (const char of tag) hash = (hash + char.charCodeAt(0)) % TAG_COLOURS.length;
+  return TAG_COLOURS[hash];
 }
 
 function linkLabel(link: string): string {
@@ -48,12 +48,15 @@ function Row({
   return (
     <li className="flex items-start gap-3 border-b border-stone-200 px-5 py-4 last:border-0 dark:border-stone-800">
       <div className="min-w-0 flex-1">
-        <div className="mb-1.5 flex items-center gap-2">
-          <span
-            className={`rounded px-1.5 py-0.5 text-[11px] font-medium tracking-wide uppercase ${topicColour(item.topic)}`}
-          >
-            {item.topic}
-          </span>
+        <div className="mb-1.5 flex flex-wrap items-center gap-2">
+          {item.tags.map((tag) => (
+            <span
+              key={tag}
+              className={`rounded px-1.5 py-0.5 text-[11px] font-medium tracking-wide uppercase ${tagColour(tag)}`}
+            >
+              {tag}
+            </span>
+          ))}
           {"readAt" in item && (
             <span className="text-[11px] text-stone-400 dark:text-stone-500">{item.readAt}</span>
           )}
@@ -71,6 +74,19 @@ function Row({
         <p className="mt-1 text-sm leading-snug text-stone-600 dark:text-stone-400">
           {item.context}
         </p>
+
+        {item.reasons && item.reasons.length > 0 && (
+          <ul className="mt-1.5 space-y-0.5">
+            {item.reasons.map((reason) => (
+              <li
+                key={reason}
+                className="text-[13px] leading-snug text-stone-500 before:mr-1.5 before:text-stone-300 before:content-['—'] dark:text-stone-500 dark:before:text-stone-600"
+              >
+                {reason}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <button

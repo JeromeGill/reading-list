@@ -83,16 +83,23 @@ Then open Reading List. The link should be there. If the app was already open, c
 ```yaml
 unread:
   - link: https://microservices.io/patterns/communication-style/idempotent-consumer.html
-    topic: messaging
+    tags: [messaging, idempotency]
     context: why at-least-once delivery forces the consumer to dedupe, and the two places to record what it has processed
+    reasons:
+      - the sync worker double-charged on a redelivered event and you wanted the standard fix
 read:
   - link: https://docs.nestjs.com/recipes/cqrs
-    topic: nestjs
+    tags: [nestjs, cqrs]
     context: when CommandBus and CommandHandler earn their keep versus a plain service
+    reasons:
+      - deciding whether the ingest module needed a command bus at all
+      - came up again while splitting the oversized upload handler
     readAt: 2026-07-30
 ```
 
-The app owns both lists and writes `readAt` when you mark something read. Claude only ever adds to the top of `unread`, and never adds a link twice. Do not hand-edit it while the app is open.
+`context` says what the doc answers. `reasons` says why *you* wanted it — one line per time it came up.
+
+The app owns both lists and writes `readAt` when you mark something read. Claude only ever adds to the top of `unread`, and never adds a link twice — a link that comes up again gets its new tags and reason merged into the entry that is already there. Do not hand-edit it while the app is open.
 
 ## Docs
 

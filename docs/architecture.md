@@ -19,25 +19,31 @@ Both halves depend on this shape, so changing it means changing both.
 ```yaml
 unread:
   - link: https://microservices.io/patterns/communication-style/idempotent-consumer.html
-    topic: messaging
+    tags: [messaging, idempotency]
     context: why at-least-once delivery forces the consumer to dedupe, and the two places to record what it has processed
+    reasons:
+      - the sync worker double-charged on a redelivered event and you wanted the standard fix
 read:
   - link: https://docs.nestjs.com/recipes/cqrs
-    topic: nestjs
+    tags: [nestjs, cqrs]
     context: when CommandBus and CommandHandler earn their keep versus a plain service
+    reasons:
+      - deciding whether the ingest module needed a command bus at all
+      - came up again while splitting the oversized upload handler
     readAt: 2026-07-30
 ```
 
-| Field     | Where       | Meaning                                                     |
-| --------- | ----------- | ----------------------------------------------------------- |
-| `link`    | both        | The URL. Claude only ever adds URLs it actually fetched.     |
-| `topic`   | both        | Short lowercase slug. The app colour-codes badges by topic.  |
-| `context` | both        | One line on what the doc *answers*.                          |
-| `readAt`  | `read` only | `YYYY-MM-DD`, written by the app when you click `×`.         |
+| Field     | Where       | Meaning                                                          |
+| --------- | ----------- | ---------------------------------------------------------------- |
+| `link`    | both        | The URL. Claude only ever adds URLs it actually fetched.          |
+| `tags`    | both        | One to three short lowercase slugs. The app colour-codes each badge. |
+| `context` | both        | One line on what the doc *answers*. Written once, then left alone. |
+| `reasons` | both        | One line per occasion it landed on the list — the user's situation, not the doc's. Absent on entries written before this field existed. |
+| `readAt`  | `read` only | `YYYY-MM-DD`, written by the app when you click `×`.              |
 
 Both top-level keys are always present. Ownership is split so the two halves cannot fight:
 
-- The skill only prepends to `unread`. It never writes `readAt`, never reorders, never moves an entry between lists.
+- The skill only prepends to `unread`, or merges `tags` and `reasons` into an existing entry in place. It never writes `readAt`, never reorders, never moves an entry between lists.
 - The app owns everything else, including the transition from `unread` to `read`.
 
 ## Two ways the skill gets installed
@@ -55,7 +61,7 @@ The plugin route works without a checkout, so it is what the README recommends. 
 
 ```
 src/
-  App.tsx            UI — list, topic badges, open, mark read
+  App.tsx            UI — list, tag badges, reasons, open, mark read
   reading-list.ts    schema types, YAML load/save, list transitions
 src-tauri/
   src/lib.rs         Tauri entry; registers the fs and opener plugins

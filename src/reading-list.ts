@@ -7,8 +7,10 @@ const opts = { baseDir: BaseDirectory.Home } as const;
 
 export type Item = {
   link: string;
-  topic: string;
+  tags: string[];
   context: string;
+  /** Absent on entries added before reasons existed. */
+  reasons?: string[];
 };
 
 export type ReadItem = Item & { readAt: string };
