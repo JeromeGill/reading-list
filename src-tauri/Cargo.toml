@@ -1,6 +1,6 @@
 [package]
 name = "readinglist"
-version = "0.3.0"
+version = "0.4.0"
 description = "Reading list"
 authors = ["Jerome Gill"]
 edition = "2021"
