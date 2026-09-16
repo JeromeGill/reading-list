@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
+  addItem,
   load,
   markRead,
   markUnread,
@@ -102,9 +103,94 @@ function Row({
   );
 }
 
+const FIELD =
+  "w-full rounded-md border border-stone-300 bg-white px-2.5 py-1.5 text-sm placeholder:text-stone-400 focus:border-sky-500 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:placeholder:text-stone-600";
+
+const listify = (value: string, separator: string | RegExp) =>
+  value
+    .split(separator)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+function AddForm({ open, onAdd }: { open: boolean; onAdd: (item: Item) => string | null }) {
+  const [link, setLink] = useState("");
+  const [tags, setTags] = useState("");
+  const [context, setContext] = useState("");
+  const [reasons, setReasons] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+  const linkInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) linkInput.current?.focus();
+  }, [open]);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = listify(reasons, "\n");
+    const rejection = onAdd({
+      link: link.trim(),
+      tags: listify(tags, ","),
+      context: context.trim(),
+      ...(parsed.length > 0 && { reasons: parsed }),
+    });
+    setProblem(rejection);
+    if (rejection) return;
+    setLink("");
+    setTags("");
+    setContext("");
+    setReasons("");
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      className="space-y-2 border-b border-stone-200 px-5 pb-4 dark:border-stone-800"
+    >
+      <input
+        ref={linkInput}
+        type="url"
+        required
+        value={link}
+        onChange={(e) => setLink(e.target.value)}
+        placeholder="https://..."
+        className={FIELD}
+      />
+      <input
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+        placeholder="Tags, comma separated"
+        className={FIELD}
+      />
+      <input
+        value={context}
+        onChange={(e) => setContext(e.target.value)}
+        placeholder="What it is"
+        className={FIELD}
+      />
+      <textarea
+        rows={2}
+        value={reasons}
+        onChange={(e) => setReasons(e.target.value)}
+        placeholder="Why it is worth reading — one reason per line"
+        className={`${FIELD} resize-none`}
+      />
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[13px] text-rose-600 dark:text-rose-400">{problem}</p>
+        <button
+          type="submit"
+          className="shrink-0 rounded-md bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800 dark:bg-sky-600 dark:hover:bg-sky-500"
+        >
+          Add
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function App() {
   const [list, setList] = useState<ReadingList | null>(null);
   const [showRead, setShowRead] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(() => {
@@ -126,6 +212,16 @@ export default function App() {
   const apply = (next: ReadingList) => {
     setList(next);
     save(next).catch((e) => setError(String(e)));
+  };
+
+  const add = (item: Item): string | null => {
+    if (!list) return null;
+    if ([...list.unread, ...list.read].some((i) => i.link === item.link)) {
+      return "Already on your list.";
+    }
+    apply(addItem(list, item));
+    setShowRead(false);
+    return null;
   };
 
   if (error) {
@@ -150,14 +246,33 @@ export default function App() {
             {items.length}
           </span>
         </h1>
-        <button
-          type="button"
-          onClick={() => setShowRead((v) => !v)}
-          className="rounded-md px-2.5 py-1 text-sm text-stone-500 hover:bg-stone-200 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
-        >
-          {showRead ? `Unread (${list.unread.length})` : `Read (${list.read.length})`}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setShowForm((v) => !v)}
+            aria-label="Add a link"
+            aria-expanded={showForm}
+            className={`rounded-md px-2 py-1 text-lg leading-none text-stone-500 transition-transform hover:bg-stone-200 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 ${showForm ? "rotate-45" : ""}`}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowRead((v) => !v)}
+            className="rounded-md px-2.5 py-1 text-sm text-stone-500 hover:bg-stone-200 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+          >
+            {showRead ? `Unread (${list.unread.length})` : `Read (${list.read.length})`}
+          </button>
+        </div>
       </header>
+
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ${showForm ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <AddForm open={showForm} onAdd={add} />
+        </div>
+      </div>
 
       {items.length === 0 ? (
         <p className="px-5 py-10 text-center text-sm text-stone-400 dark:text-stone-500">

@@ -49,3 +49,7 @@ export function markUnread(list: ReadingList, item: ReadItem): ReadingList {
     read: list.read.filter((i) => i !== item),
   };
 }
+
+export function addItem(list: ReadingList, item: Item): ReadingList {
+  return { ...list, unread: [item, ...list.unread] };
+}
